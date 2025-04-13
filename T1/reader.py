@@ -50,9 +50,9 @@ class Reader:
 
                 if ":" in line:
                     label, rest = line.split(":", 1)
-                    labels[label.strip()] = program_counter
-                    line = rest.strip()
-                    if not line:
+                    labels[label.strip()] = program_counter 
+                    line = rest.strip() 
+                    if not line: 
                         continue
 
                 upper_line = line.upper()
