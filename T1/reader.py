@@ -1,11 +1,5 @@
 class Reader:
-    enumerate = {
-        "arithmetic": 0,
-        "memory": 1,
-        "jump": 2,
-        "system": 3,
-    }
-
+    
     prefix_map = {
         "ADD": "arithmetic",
         "SUB": "arithmetic",
@@ -21,7 +15,7 @@ class Reader:
     }
 
     @staticmethod
-    def loadFile(path):
+    def _load_File(path):
         with open(path, 'r') as f:
             lines = f.readlines()
 
@@ -29,7 +23,7 @@ class Reader:
         data = []
         labels = {}
         current_section = None
-        instruction_counter = 0
+        program_counter = 0
 
         for raw_line in lines:
             line = raw_line.strip()
@@ -56,7 +50,7 @@ class Reader:
 
                 if ":" in line:
                     label, rest = line.split(":", 1)
-                    labels[label.strip()] = instruction_counter
+                    labels[label.strip()] = program_counter
                     line = rest.strip()
                     if not line:
                         continue
@@ -73,9 +67,9 @@ class Reader:
                 instructions.append({
                     "instruction": line,
                     "mode": mode,
-                    "type": Reader.enumerate[instruction_type]
+                    "type": Reader.prefix_map.get(op),
                 })
-                instruction_counter += 1
+                program_counter += 1
 
             elif current_section == "data":
                 data.append(line)
