@@ -1,10 +1,10 @@
 from reader import Reader
-from program import Program
+from process import Process
 
 def main():
-    instructions, data, labels = Reader._load_File("./inputFiles/prog2.txt")
+    instructions, data, labels = Reader._load_File("./inputFiles/prog1.txt")
     print("Labels carregados:", labels)
-    program = Program(instructions, data, labels)
+    program = Process(instructions, data, labels)
     program.execute()
 
 if __name__ == "__main__":
