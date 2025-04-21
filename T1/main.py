@@ -1,11 +1,8 @@
-from reader import Reader
-from process import Process
+from simulator import Simulator
 
 def main():
-    instructions, data, labels = Reader._load_File("./inputFiles/prog1.txt")
-    print("Labels carregados:", labels)
-    program = Process(instructions, data, labels)
-    program.execute()
+    simulator = Simulator()
+    simulator._run()
 
 if __name__ == "__main__":
     main()

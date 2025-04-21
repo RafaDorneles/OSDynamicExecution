@@ -1,5 +1,3 @@
-import random
-import time
 from enum import Enum
 
 class State(Enum):
@@ -8,20 +6,21 @@ class State(Enum):
     RUNNING = "RUNNING"
     TERMINATED = "TERMINATED"
 
-class Process:
+class Task:
     pid = 0  
 
-    def __init__(self, instructions, data, labels):
+    def __init__(self, instructions, data, labels, path):
         self.instructions = instructions         
         self.labels = labels                  
         self.data = self._parse_data(data)
         self.pc = 0  
         self.acc = 0 
-        self.state = State.READY
         self.block_duration = 0
-        Process.pid += 1
-        self.pid = Process.pid
+        Task.pid += 1
+        self.pid = Task.pid
         self.input_locked = set()
+        self.path = path
+        self.completed = False
         
     def _parse_data(self, data):
         parsed_data = {}
@@ -32,41 +31,63 @@ class Process:
                 parsed_data[label] = int(value)
         return parsed_data
 
-    def execute(self):
-        self.state = State.RUNNING
-        print(f"Process {self.pid}.")
-
-        while self.state != State.TERMINATED and self.pc < len(self.instructions):
-            instr = self.instructions[self.pc]
-            parts = instr["instruction"].split()
-            op = parts[0].upper()
-            operand = parts[1] if len(parts) > 1 else None  
-
-            if op == "LOAD":
-                self._load(operand)
-            elif op == "DIV":
-                self._div(operand)
-            elif op == "MULT":
-                self._mult(operand)
-            elif op == "ADD":
-                self._add(operand)
-            elif op == "STORE":
-                self._store(operand)
-            elif op == "SUB":
-                self._sub(operand)
-            elif op == "SYSCALL":
-                self._syscall(int(operand))
-            elif op in ["BRANY", "BRZERO", "BRPOS", "BRNEG"]:
-                self._jump(op, operand)
-                continue  
+    def execute(self, instruction):
+        if isinstance(instruction, dict):
+            instr = instruction
+        else:
+            for i in self.instructions:
+                if i["instruction"] == instruction:
+                    instr = i
+                    break
             else:
-                raise ValueError(f"Unknown instruction: {op}")
+                raise ValueError(f"Instruction not found: {instruction}")
+        
+        parts = instr["instruction"].split()
+        op = parts[0].upper()
+        operand = parts[1] if len(parts) > 1 else None
+        
+        should_block = False
+        should_terminate = False
+        
+        if op == "LOAD":
+            self._load(operand)
+        elif op == "DIV":
+            self._div(operand)
+        elif op == "MULT":
+            self._mult(operand)
+        elif op == "ADD":
+            self._add(operand)
+        elif op == "STORE":
+            self._store(operand)
+        elif op == "SUB":
+            self._sub(operand)
+        elif op == "SYSCALL":
+            result = self._syscall(int(operand))
+            should_block = result == "BLOCK"
+            should_terminate = result == "TERMINATE"
+        elif op in ["BRANY", "BRZERO", "BRPOS", "BRNEG"]:
+            old_pc = self.pc
+            self._jump(op, operand)
+            if old_pc == self.pc:
+                self.pc += 1
+            return {
+                "should_block": should_block,
+                "should_terminate": should_terminate,
+                "completed": self.pc >= len(self.instructions),
+                "jump": True  
+            }
+        else:
+            raise ValueError(f"Unknown instruction: {op}")
 
-            self.pc += 1  
-
-        print("\nFinal data:")
-        for key, value in self.data.items():
-            print(f"{key}: {value}")
+        if op not in ["BRANY", "BRZERO", "BRPOS", "BRNEG"]:
+            self.pc += 1
+        
+        return {
+            "should_block": should_block,
+            "should_terminate": should_terminate,
+            "completed": self.pc >= len(self.instructions),
+            "jump": False  
+        }
 
     def _sub(self, operand):
         if operand.startswith("#"):  
@@ -123,24 +144,23 @@ class Process:
             self.data[operand] = value if value is not None else self.acc
 
     def _syscallInput(self, target_variable):
-            try:
-                user_input = int(input(f"Type a number for {target_variable}: "))
-                self.data[target_variable] = user_input
-                self.acc = user_input 
-                self.input_locked.add(target_variable)
-            except ValueError:
-                print("Invalid input.")
-            self.state = State.READY 
+        try:
+            user_input = int(input(f"Type a number for {target_variable}: "))
+            self.data[target_variable] = user_input
+            self.acc = user_input 
+            self.input_locked.add(target_variable)
+        except ValueError:
+            print("Invalid input.")
+        return "BLOCK" 
 
     def _syscall(self, code):
         if code == 0: 
-            self.state = State.TERMINATED
+            return "TERMINATE"  
         elif code == 1:  
             print(f"ACC: {self.acc}")
+            return "BLOCK" 
         elif code == 2:  
             target_variable = self.instructions[self.pc - 1]["instruction"].split()[1]  
-            self._syscallInput(target_variable)
+            return self._syscallInput(target_variable)
         else:
             raise ValueError(f"Unknown syscall code: {code}")
-
-

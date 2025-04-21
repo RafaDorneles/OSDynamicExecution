@@ -1,0 +1,27 @@
+.code
+  load num
+  store total
+  syscall 2       
+  store iteracoes
+loop:
+  BRZERO fim     
+  load total
+  mult #2        
+  add iteracoes  
+  store total
+  load iteracoes
+  sub #1          
+  store iteracoes
+  syscall 1       
+  BRANY loop      
+fim:
+  load total      
+  syscall 1       
+  syscall 0       
+.endcode
+
+.data
+  num 5           
+  total 0        
+  iteracoes 0     
+.enddata
