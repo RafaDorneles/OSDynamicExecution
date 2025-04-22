@@ -1,0 +1,10 @@
+.code
+  load a
+  mult #3
+  syscall 1
+  syscall 0
+.endcode
+
+.data
+  a 5
+.enddata

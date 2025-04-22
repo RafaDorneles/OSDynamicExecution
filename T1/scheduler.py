@@ -14,9 +14,10 @@ class EDFScheduler:
             "arrival_time": arrival_time,
             "computation_time": computation_time,
             "period": period,
-            "deadline": arrival_time + period,  
+            "deadline": arrival_time + period,
             "remaining_time": computation_time,
-            "state": State.READY  
+            "state": State.READY,
+            "can_restart": True 
         }
         self.processes.append(process)
 
@@ -36,7 +37,7 @@ class EDFScheduler:
             if (process["state"] != State.TERMINATED and 
                 self.time > process["deadline"] and 
                 process["remaining_time"] > 0):
-                print(f"Processo {process['task'].pid} perdeu o deadline! Tempo perdido: {self.time - process['deadline']}")
+                print(f"Processo {process['task'].pid} perdeu o deadline! Faltou: {process['computation_time'] - process['remaining_time']}u")
                 process["state"] = State.TERMINATED
                 print(f"Processo {process['task'].pid} foi terminado devido à perda de deadline.")
                 
@@ -61,7 +62,7 @@ class EDFScheduler:
 
             for process in self.processes:
                 if self.time > 0 and self.time % process["period"] == 0:
-                    if process["state"] == State.TERMINATED:
+                    if process["state"] == State.TERMINATED and process["can_restart"]:
                         print(f"Processo {process['task'].pid} chegou novamente e foi reiniciado.")
                         process["remaining_time"] = process["computation_time"]
                         process["deadline"] = self.time + process["period"]
@@ -82,11 +83,11 @@ class EDFScheduler:
                 if task.pc < len(task.instructions):
                     current_instruction = task.instructions[task.pc]
                     instruction_str = current_instruction["instruction"]
-                    
+
                     print(f"  Executando instrução: {instruction_str}")
-                                        
+
                     result = task.execute(instruction_str)
-                    
+
                     if result["should_block"]:
                         print(f"  Tarefa {task.pid} bloqueada")
                         current_process["block_duration"] = random.randint(1, 3)
@@ -96,11 +97,13 @@ class EDFScheduler:
                         print(f"  Tarefa {task.pid} terminada")
                         current_process["state"] = State.TERMINATED
                         current_process["remaining_time"] = 0
+                        current_process["can_restart"] = False
                     else:
                         current_process["state"] = State.READY
                         self.readyQueue.append(current_process)
 
-                    current_process["remaining_time"] -= 1
+                    if current_process["state"] != State.TERMINATED:
+                        current_process["remaining_time"] -= 1
                 else:
                     print(f"  Tarefa {task.pid} concluiu todas as instruções")
                     current_process["state"] = State.TERMINATED

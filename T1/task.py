@@ -15,7 +15,6 @@ class Task:
         self.data = self._parse_data(data)
         self.pc = 0  
         self.acc = 0 
-        self.block_duration = 0
         Task.pid += 1
         self.pid = Task.pid
         self.input_locked = set()
@@ -113,7 +112,7 @@ class Task:
             self.acc *= self.data.get(operand, 0)
 
     def _jump(self, op, operand):
-        accumulator = self.acc - 1
+        accumulator = self.acc
 
         if op == "BRANY":
             self.pc = self.labels[operand]

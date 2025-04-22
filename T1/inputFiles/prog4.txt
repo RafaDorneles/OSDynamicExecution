@@ -1,0 +1,11 @@
+.code
+  syscall 2
+  add #10
+  store resultado
+  syscall 1
+  syscall 0
+.endcode
+
+.data
+  resultado 0
+.enddata
