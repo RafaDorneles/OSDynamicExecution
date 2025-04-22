@@ -68,15 +68,12 @@ class EDFScheduler:
                     process["state"] = State.READY
                     process["task"].pc = 0
                     
-                            # Zerar o tempo de bloqueio, se necessário
                     if "block_duration" in process:
                         process["block_duration"] = 0
                         
-                    # Remover da fila de bloqueados, se necessário
                     if process in self.blockedQueue:
                         self.blockedQueue.remove(process)
                     
-                    # Adicionar à fila de prontos, se ainda não estiver
                     if process not in self.readyQueue:
                         self.readyQueue.append(process)
             
