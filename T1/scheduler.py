@@ -17,7 +17,6 @@ class EDFScheduler:
             "deadline": arrival_time + period,
             "remaining_time": computation_time,
             "state": State.READY,
-            "can_restart": True 
         }
         self.processes.append(process)
 
@@ -62,14 +61,18 @@ class EDFScheduler:
 
             for process in self.processes:
                 if self.time > 0 and self.time % process["period"] == 0:
-                    if process["state"] == State.TERMINATED and process["can_restart"]:
+                    if process["state"] == State.TERMINATED:
                         print(f"Processo {process['task'].pid} chegou novamente e foi reiniciado.")
                         process["remaining_time"] = process["computation_time"]
                         process["deadline"] = self.time + process["period"]
                         process["state"] = State.READY
+                        process["task"].pc = 0
+                        if "block_duration" in process:
+                            process["block_duration"] = 0
                         if process not in self.readyQueue:
                             self.readyQueue.append(process)
-            
+                        if process not in self.readyQueue:
+                            self.readyQueue.append(process)
             self.readyQueue.sort(key=lambda p: p["deadline"])
             
             if self.readyQueue:
@@ -97,7 +100,6 @@ class EDFScheduler:
                         print(f"  Tarefa {task.pid} terminada")
                         current_process["state"] = State.TERMINATED
                         current_process["remaining_time"] = 0
-                        current_process["can_restart"] = False
                     else:
                         current_process["state"] = State.READY
                         self.readyQueue.append(current_process)
@@ -116,10 +118,13 @@ class EDFScheduler:
                 
                 if process["block_duration"] <= 0:
                     self.blockedQueue.remove(process)
-                    process["state"] = State.READY
-                    self.readyQueue.append(process)
-                    print(f"Processo {process['task'].pid} desbloqueado e movido para a fila de prontos")
-            
+                    if process["state"] != State.READY:
+                        process["state"] = State.READY
+                        print(f"Estado do processo {process['task'].pid} corrigido para READY.")
+                    if process not in self.readyQueue:
+                        self.readyQueue.append(process)
+                        print(f"Processo {process['task'].pid} desbloqueado e movido para a fila de prontos")
+                        
             self.time += 1
 
         
