@@ -37,7 +37,7 @@ class EDFScheduler:
             if (process["state"] != State.TERMINATED and 
                 self.time > process["deadline"] and 
                 process["remaining_time"] > 0):
-                print(f"Processo {process['task'].pid} perdeu o deadline! Faltou: {process['computation_time'] - process['remaining_time']}u")
+                print(f"Processo {process['task'].pid} perdeu o deadline! Tempo executado: {process['computation_time'] - process['remaining_time']}u")
                 process["state"] = State.TERMINATED
                 print(f"Processo {process['task'].pid} foi terminado devido à perda de deadline.")
                 
@@ -48,7 +48,7 @@ class EDFScheduler:
 
     def _run(self):
         print("Iniciando o escalonamento EDF...")
-        simulation_time = 200  
+        simulation_time = 500  
         
         while self.time < simulation_time and any(p["state"] != State.TERMINATED for p in self.processes):              
             print(f"\n--- Tempo: {self.time} ---")
@@ -62,13 +62,23 @@ class EDFScheduler:
 
             for process in self.processes:
                 if self.time > 0 and self.time % process["period"] == 0:
-                    if process["state"] == State.TERMINATED and process["can_restart"]:
-                        print(f"Processo {process['task'].pid} chegou novamente e foi reiniciado.")
-                        process["remaining_time"] = process["computation_time"]
-                        process["deadline"] = self.time + process["period"]
-                        process["state"] = State.READY
-                        if process not in self.readyQueue:
-                            self.readyQueue.append(process)
+                    print(f"Processo {process['task'].pid} chegou novamente e foi reiniciado.")
+                    process["remaining_time"] = process["computation_time"]
+                    process["deadline"] = self.time + process["period"]
+                    process["state"] = State.READY
+                    process["task"].pc = 0
+                    
+                            # Zerar o tempo de bloqueio, se necessário
+                    if "block_duration" in process:
+                        process["block_duration"] = 0
+                        
+                    # Remover da fila de bloqueados, se necessário
+                    if process in self.blockedQueue:
+                        self.blockedQueue.remove(process)
+                    
+                    # Adicionar à fila de prontos, se ainda não estiver
+                    if process not in self.readyQueue:
+                        self.readyQueue.append(process)
             
             self.readyQueue.sort(key=lambda p: p["deadline"])
             
@@ -97,7 +107,7 @@ class EDFScheduler:
                         print(f"  Tarefa {task.pid} terminada")
                         current_process["state"] = State.TERMINATED
                         current_process["remaining_time"] = 0
-                        current_process["can_restart"] = False
+                        current_process["can_restart"] = True
                     else:
                         current_process["state"] = State.READY
                         self.readyQueue.append(current_process)
@@ -116,10 +126,14 @@ class EDFScheduler:
                 
                 if process["block_duration"] <= 0:
                     self.blockedQueue.remove(process)
-                    process["state"] = State.READY
-                    self.readyQueue.append(process)
-                    print(f"Processo {process['task'].pid} desbloqueado e movido para a fila de prontos")
-            
+                    if process["state"] != State.READY:
+                        process["state"] = State.READY
+                        print(f"Estado do processo {process['task'].pid} corrigido para READY.")
+                    if process not in self.readyQueue:
+                        self.readyQueue.append(process)
+                        print(f"Processo {process['task'].pid} desbloqueado e movido para a fila de prontos")
+                        
+                        
             self.time += 1
 
         
