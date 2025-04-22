@@ -47,7 +47,7 @@ class EDFScheduler:
 
     def _run(self):
         print("Iniciando o escalonamento EDF...")
-        simulation_time = 200  
+        simulation_time = 500  
         
         while self.time < simulation_time and any(p["state"] != State.TERMINATED for p in self.processes):              
             print(f"\n--- Tempo: {self.time} ---")
@@ -67,12 +67,17 @@ class EDFScheduler:
                         process["deadline"] = self.time + process["period"]
                         process["state"] = State.READY
                         process["task"].pc = 0
+                        process["task"].data = process["task"].initial_data
+
                         if "block_duration" in process:
                             process["block_duration"] = 0
+
                         if process not in self.readyQueue:
                             self.readyQueue.append(process)
+
                         if process not in self.readyQueue:
                             self.readyQueue.append(process)
+
             self.readyQueue.sort(key=lambda p: p["deadline"])
             
             if self.readyQueue:
@@ -100,6 +105,7 @@ class EDFScheduler:
                         print(f"  Tarefa {task.pid} terminada")
                         current_process["state"] = State.TERMINATED
                         current_process["remaining_time"] = 0
+                        current_process["can_restart"] = True
                     else:
                         current_process["state"] = State.READY
                         self.readyQueue.append(current_process)

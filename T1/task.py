@@ -18,6 +18,7 @@ class Task:
         Task.pid += 1
         self.pid = Task.pid
         self.input_locked = set()
+        self.initial_data = self.data.copy() 
         self.path = path
         self.completed = False
         
