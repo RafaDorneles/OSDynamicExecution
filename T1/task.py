@@ -18,9 +18,9 @@ class Task:
         Task.pid += 1
         self.pid = Task.pid
         self.input_locked = set()
-        self.initial_data = self.data.copy() 
         self.path = path
         self.completed = False
+        self.initial_data = self.data.copy()
         
     def _parse_data(self, data):
         parsed_data = {}

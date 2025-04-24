@@ -38,6 +38,7 @@ class EDFScheduler:
                 process["remaining_time"] > 0):
                 print(f"Processo {process['task'].pid} perdeu o deadline! Faltou: {process['computation_time'] - process['remaining_time']}u")
                 process["state"] = State.TERMINATED
+                process["remaining_time"] = 0  
                 print(f"Processo {process['task'].pid} foi terminado devido à perda de deadline.")
                 
                 if process in self.readyQueue:
@@ -49,7 +50,7 @@ class EDFScheduler:
         print("Iniciando o escalonamento EDF...")
         simulation_time = 500  
         
-        while self.time < simulation_time and any(p["state"] != State.TERMINATED for p in self.processes):              
+        while self.time < simulation_time:              
             print(f"\n--- Tempo: {self.time} ---")
             
             self._check_deadlines()
@@ -61,19 +62,15 @@ class EDFScheduler:
 
             for process in self.processes:
                 if self.time > 0 and self.time % process["period"] == 0:
-                    if process["state"] == State.TERMINATED:
                         print(f"Processo {process['task'].pid} chegou novamente e foi reiniciado.")
                         process["remaining_time"] = process["computation_time"]
                         process["deadline"] = self.time + process["period"]
-                        process["state"] = State.READY
-                        process["task"].pc = 0
                         process["task"].data = process["task"].initial_data
+                        process["task"].pc = 0
+                        process["state"] = State.READY
 
                         if "block_duration" in process:
                             process["block_duration"] = 0
-
-                        if process not in self.readyQueue:
-                            self.readyQueue.append(process)
 
                         if process not in self.readyQueue:
                             self.readyQueue.append(process)

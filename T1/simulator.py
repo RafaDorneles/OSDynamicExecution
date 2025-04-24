@@ -11,8 +11,8 @@ class Simulator:
         scheduler = EDFScheduler()
 
         input_files = [
-            {"path": "inputFiles/prog2.txt", "arrival_time": 0, "computation_time": 78, "period": 155},
-            {"path": "inputFiles/prog3.txt", "arrival_time": 0, "computation_time": 77, "period": 155},
+            {"path": "inputFiles/prog2.txt", "arrival_time": 0, "computation_time": 78, "period": 160},
+            {"path": "inputFiles/prog3.txt", "arrival_time": 0, "computation_time": 77, "period": 160},
             # {"path": "inputFiles/prog1.txt", "arrival_time": 0, "computation_time": 80, "period": 150},
             # {"path": "inputFiles/prog4.txt", "arrival_time": 0, "computation_time": 80, "period": 200},
             # {"path": "inputFiles/prog5.txt", "arrival_time": 0, "computation_time": 80, "period": 250},
